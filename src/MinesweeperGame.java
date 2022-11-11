@@ -9,13 +9,14 @@ public CellProperties[][] cellProperties = new CellProperties[DIMENSION][DIMENSI
         setScreenSize(DIMENSION, DIMENSION);
         createGame();
     }
-    public void createGame(){
-        for (int i = 0; i < DIMENSION; i++){
-            for (int j = 0; j < DIMENSION; j++){
-                setCellColor(i,j, Color.AQUA);
+    private void createGame(){
+        for (int x = 0; x < DIMENSION; x++){
+            for (int y = 0; y < DIMENSION; y++){
+                boolean isMine = getRandomNumber(100)<10;
+                cellProperties[x][y] = new CellProperties(x,y,isMine);
+                setCellColor(x,y, Color.BLANCHEDALMOND);
             }
         }
-
     }
 
 
