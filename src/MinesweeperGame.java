@@ -24,6 +24,7 @@ public class MinesweeperGame extends Game{
         @Override
         public void onMouseLeftClick(int x, int y) {
             if (isGameStopped){
+                restart();
                 return;
             }
             openTile(x, y);
@@ -34,7 +35,11 @@ public class MinesweeperGame extends Game{
         }
 
         private void createGame() {
-
+            for (int y = 0; y < SIDE; y++) {
+                for (int x = 0; x < SIDE; x++) {
+                    setCellValue(x,y,"");
+                }
+            }
             for (int y = 0; y < SIDE; y++) {
                 for (int x = 0; x < SIDE; x++) {
                     boolean isMine = getRandomNumber(10) < 1;
@@ -48,9 +53,22 @@ public class MinesweeperGame extends Game{
             countMineNeighbours();
             countFlags = countMinesOnField;
         }
-
-
-
+        private void gameOver(){
+            isGameStopped = true;
+            showMessageDialog(Color.AZURE, "You lost!!!!!!",Color.BLACK, 30);
+        }
+        private void win(){
+            isGameStopped = true;
+            showMessageDialog(Color.AZURE,"You won!!",Color.BLACK,30);
+        }
+        private void restart(){
+            setScore(score=0);
+            countClosedTiles = SIDE*SIDE;
+            isGameStopped = false;
+            countFlags = 0;
+            countMinesOnField = 0;
+            createGame();
+        }
 
         private List<CellProperties> getNeighbors(CellProperties cellProperties) {
             List<CellProperties> result = new ArrayList<>();
@@ -92,6 +110,7 @@ public class MinesweeperGame extends Game{
                 setCellColor(x, y, Color.GREEN);
                 if (cellProperties.isMine) {
                     setCellValueEx(cellProperties.x, cellProperties.y, Color.RED, MINE);
+                    gameOver();
                 } else if (cellProperties.countMineNeighbours == 0) {
                     score = score + 5;
                     setScore(score);
@@ -107,6 +126,8 @@ public class MinesweeperGame extends Game{
                     setScore(score);
                     setCellNumber(x, y, cellProperties.countMineNeighbours);
                 }
+            } if (countClosedTiles == countMinesOnField && !cellProperties.isMine){
+                win();
             }
 
         }
