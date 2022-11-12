@@ -27,7 +27,9 @@ public class MinesweeperGame extends Game{
                 restart();
                 return;
             }
-            openTile(x, y);
+            if (x >= 0 && x < SIDE && y >= 0 && y < SIDE) {
+                openTile(x, y);
+            }
         }
         @Override
         public void onMouseRightClick(int x, int y){
@@ -103,34 +105,37 @@ public class MinesweeperGame extends Game{
         }
         private void openTile(int x, int y) {
             CellProperties cellProperties = cellField[y][x];
-            if (!isGameStopped && !cellProperties.isOpen && !cellProperties.isFlag) {
-                cellProperties.isOpen = true;
-                countClosedTiles--;
 
-                setCellColor(x, y, Color.GREEN);
-                if (cellProperties.isMine) {
-                    setCellValueEx(cellProperties.x, cellProperties.y, Color.RED, MINE);
-                    gameOver();
-                } else if (cellProperties.countMineNeighbours == 0) {
-                    score = score + 5;
-                    setScore(score);
-                    setCellValue(cellProperties.x, cellProperties.y, "");
-                    List<CellProperties> neighbors = getNeighbors(cellProperties);
-                    for (CellProperties neighbor : neighbors) {
-                        if (!neighbor.isOpen) {
-                            openTile(neighbor.x, neighbor.y);
+
+                if (!isGameStopped && !cellProperties.isOpen && !cellProperties.isFlag) {
+                    cellProperties.isOpen = true;
+                    countClosedTiles--;
+
+                    setCellColor(x, y, Color.GREEN);
+                    if (cellProperties.isMine) {
+                        setCellValueEx(cellProperties.x, cellProperties.y, Color.RED, MINE);
+                        gameOver();
+                    } else if (cellProperties.countMineNeighbours == 0) {
+                        score = score + 5;
+                        setScore(score);
+                        setCellValue(cellProperties.x, cellProperties.y, "");
+                        List<CellProperties> neighbors = getNeighbors(cellProperties);
+                        for (CellProperties neighbor : neighbors) {
+                            if (!neighbor.isOpen) {
+                                openTile(neighbor.x, neighbor.y);
+                            }
                         }
+                    } else {
+                        score = score + 5;
+                        setScore(score);
+                        setCellNumber(x, y, cellProperties.countMineNeighbours);
                     }
-                } else {
-                    score = score + 5;
-                    setScore(score);
-                    setCellNumber(x, y, cellProperties.countMineNeighbours);
                 }
-            } if (countClosedTiles == countMinesOnField && !cellProperties.isMine){
-                win();
+                if (countClosedTiles == countMinesOnField && !cellProperties.isMine) {
+                    win();
+                }
             }
 
-        }
         private void markTile(int x, int y){
         CellProperties cellProperties = cellField[y][x];
         if (!cellProperties.isOpen && !isGameStopped){
