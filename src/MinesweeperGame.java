@@ -1,41 +1,114 @@
 import com.codegym.engine.cell.Color;
 import com.codegym.engine.cell.Game;
 
-public class MinesweeperGame extends Game{
-private final int DIMENSION = 12;
-public CellProperties[][] cellObject = new CellProperties[DIMENSION][DIMENSION];
-    private static final String MINE = "\uD83D\uDCA3";
-    private static final String FLAG = "\uD83D\uDEA9";
+import java.util.ArrayList;
+import java.util.List;
 
-    @Override
-    public void initialize() {
-        setScreenSize(DIMENSION, DIMENSION);
-        createGame();
-    }
-    private void createGame(){
-        for (int x = 0; x < DIMENSION; x++){
-            for (int y = 0; y < DIMENSION; y++){
-                boolean isMine = getRandomNumber(100)<10;
-                cellObject[x][y] = new CellProperties(x,y,isMine);
-                setCellColor(x,y, Color.BLANCHEDALMOND);
+public class MinesweeperGame extends Game{
+        private static final int SIDE = 9;
+        private CellProperties[][] cellField = new CellProperties[SIDE][SIDE];
+        private int countMinesOnField;
+        private int countFlags;
+        private static final String MINE = "\uD83D\uDCA3";
+        private static final String FLAG = "\uD83D\uDEA9";
+        private boolean isGameStopped;
+        private int countClosedTiles = SIDE*SIDE;
+        private int score;
+
+        @Override
+        public void initialize() {
+            setScreenSize(SIDE, SIDE);
+            createGame();
+        }
+
+        @Override
+        public void onMouseLeftClick(int x, int y) {
+            if (isGameStopped){
+                return;
+            }
+            openTile(x, y);
+        }
+        @Override
+        public void onMouseRightClick(int x, int y){
+        }
+
+        private void createGame() {
+
+            for (int y = 0; y < SIDE; y++) {
+                for (int x = 0; x < SIDE; x++) {
+                    boolean isMine = getRandomNumber(10) < 1;
+                    if (isMine) {
+                        countMinesOnField++;
+                    }
+                    cellField[y][x] = new CellProperties(x, y, isMine);
+                    setCellColor(x, y, Color.ORANGE);
+                }
+            }
+            countMineNeighbours();
+            countFlags = countMinesOnField;
+        }
+
+
+
+
+        private List<CellProperties> getNeighbors(CellProperties cellProperties) {
+            List<CellProperties> result = new ArrayList<>();
+            for (int y = cellProperties.y - 1; y <= cellProperties.y + 1; y++) {
+                for (int x = cellProperties.x - 1; x <= cellProperties.x + 1; x++) {
+                    if (y < 0 || y >= SIDE) {
+                        continue;
+                    }
+                    if (x < 0 || x >= SIDE) {
+                        continue;
+                    }
+                    if (cellField[y][x] == cellProperties) {
+                        continue;
+                    }
+                    result.add(cellField[y][x]);
+                }
+            }
+
+            return result;
+        }
+
+        private void countMineNeighbours() {
+            for (int x = 0; x < SIDE; x++) {
+                for (int y = 0; y < SIDE; y++) {
+                    CellProperties cellProperties = cellField[x][y];
+                    //getNeighbors(cellProperties);
+                    if (!cellProperties.isMine) {
+                        cellProperties.countMineNeighbours = Math.toIntExact(getNeighbors(cellProperties).stream().filter(neighbor -> neighbor.isMine).count());
+                    }
+                }
             }
         }
-    }
 
-    @Override
-    public void onMouseLeftClick(int x, int y) {
-        openCell(x,y);
-    }
-    @Override
-    public void onMouseRightClick(int x, int y) {
-        //
-    }
-    private void openCell(int x, int y){
-        CellProperties cellProperties = cellObject[x][y];
-        if (cellProperties.isMine){
-            setCellValue(cellProperties.x,cellProperties.y,MINE);
-        } else {
-            setCellColor(cellProperties.x,cellProperties.y,Color.CYAN);
+        private void openTile(int x, int y) {
+            CellProperties cellProperties = cellField[y][x];
+            if (!isGameStopped && !cellProperties.isOpen && !cellProperties.isFlag) {
+                cellProperties.isOpen = true;
+                countClosedTiles--;
+
+                setCellColor(x, y, Color.GREEN);
+                if (cellProperties.isMine) {
+                    setCellValueEx(cellProperties.x, cellProperties.y, Color.RED, MINE);
+                } else if (cellProperties.countMineNeighbours == 0) {
+                    score = score + 5;
+                    setScore(score);
+                    setCellValue(cellProperties.x, cellProperties.y, "");
+                    List<CellProperties> neighbors = getNeighbors(cellProperties);
+                    for (CellProperties neighbor : neighbors) {
+                        if (!neighbor.isOpen) {
+                            openTile(neighbor.x, neighbor.y);
+                        }
+                    }
+                } else {
+                    score = score + 5;
+                    setScore(score);
+                    setCellNumber(x, y, cellProperties.countMineNeighbours);
+                }
+            }
+
         }
+
     }
-}
